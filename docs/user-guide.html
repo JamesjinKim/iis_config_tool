@@ -216,11 +216,13 @@ npm run tauri dev</code></pre>
     <div class="icon">✅</div>
     <div class="title">설정 완료 &amp; WiFi 연결됨!</div>
     <div style="background:#ebfbee;border:1px solid #b2f2bb;border-radius:8px;padding:12px;font-size:13px;text-align:left">
+      <div style="color:#6b7585"><b style="color:#1a2233">펌웨어:</b> <span style="color:#2f9e44;font-weight:700">IIS3DWB 진동센서 v1.0.0</span></div>
       <div style="color:#6b7585"><b style="color:#1a2233">WiFi:</b> <span style="color:#2f9e44;font-weight:700">example2.4G</span></div>
       <div style="color:#6b7585"><b style="color:#1a2233">IP 주소:</b> <span style="color:#2f9e44;font-weight:700">192.168.0.225</span></div>
     </div>
     <div style="color:#6b7585;font-size:12px;margin-top:8px">▸ 부팅 로그 보기</div>
-    <div class="btn green">종료</div>
+    <div style="background:#ebfbee;border:1px solid #b2f2bb;border-radius:8px;padding:10px;font-size:13px;text-align:center;color:#2f9e44;margin-top:8px">
+      ✅ 모든 설정이 끝났습니다. <b style="color:#1a2233">USB를 분리</b>하고 사용하세요.</div>
     <div style="color:#6b7585;font-size:13px;text-align:center;margin-top:8px">다른 디바이스 설정</div>
   </div>
 
@@ -230,20 +232,20 @@ npm run tauri dev</code></pre>
   </div>
 
   <div class="pick">
-    <div class="h">📌 완료 화면의 버튼 — 결과에 따라 다릅니다</div>
+    <div class="h">📌 완료 화면 — 결과에 따라 다릅니다</div>
     <table>
-      <tr><th>결과</th><th>강조 버튼</th><th>보조 버튼</th></tr>
+      <tr><th>결과</th><th>화면</th><th>다음 행동</th></tr>
       <tr><td>✅ <b>연결됨 (성공)</b></td>
-          <td><b>종료</b> (앱 닫기)</td>
-          <td>다른 디바이스 설정 (처음으로)</td></tr>
+          <td>"✅ 모든 설정이 끝났습니다. USB를 분리하세요" 안내 표시</td>
+          <td><b>USB 분리</b> 후 창을 <b>⨉(좌측 상단)</b>로 닫으면 끝</td></tr>
       <tr><td>❌🔑⏳ <b>연결 안 됨</b></td>
-          <td><b>다시 설정</b> (WiFi 재입력)</td>
-          <td>종료</td></tr>
+          <td><b>다시 설정</b> 버튼 강조</td>
+          <td>값을 고쳐 <b>다시 설정</b></td></tr>
     </table>
     <p class="muted" style="margin:8px 0 0">
-      💡 <b>성공하면 "종료"</b>를 눌러 끝내면 됩니다.
-      <b>실패하면 "다시 설정"</b>이 강조되니, 값을 고쳐 다시 시도하세요.
-      여러 디바이스를 연속 설정할 때는 "다른 디바이스 설정"을 누르세요.</p>
+      💡 <b>성공하면</b> 안내대로 USB를 분리하고 창을 닫으면 됩니다 (앱이 자동으로 꺼지지 않음).
+      <b>실패하면 "다시 설정"</b>으로 값을 고쳐 재시도하세요.
+      여러 디바이스를 연속 설정할 때는 <b>"다른 디바이스 설정"</b>을 누르세요.</p>
   </div>
 
   <p>결과는 4가지로 명확히 안내됩니다:</p>
@@ -251,7 +253,7 @@ npm run tauri dev</code></pre>
     <tr><th>화면</th><th>의미</th><th>할 일</th></tr>
     <tr><td>✅ <b>설정 완료 &amp; WiFi 연결됨!</b><br>+ IP 주소</td>
         <td>성공. 연결 확인됨.</td>
-        <td>USB 분리 OK. <b>종료</b> 클릭.</td></tr>
+        <td><b>USB 분리</b> 후 창을 ⨉로 닫으면 끝.</td></tr>
     <tr><td>❌ <b>WiFi를 찾을 수 없습니다</b></td>
         <td>주변에 그 WiFi가 없음.<br><b>5GHz</b>이거나 이름 오타일 가능성 큼.</td>
         <td><b>2.4GHz</b> WiFi인지, 이름 대소문자가 맞는지 확인 후 <b>다시 설정</b></td></tr>
@@ -289,7 +291,7 @@ npm run tauri dev</code></pre>
     <tr><td>2</td><td>WiFi 이름 (SSID)</td><td>텍스트 입력</td><td>WiFi 이름 직접 타이핑 (2.4GHz)</td></tr>
     <tr><td>2</td><td>비밀번호</td><td>텍스트 입력</td><td>WiFi 비밀번호 입력</td></tr>
     <tr><td>2</td><td>저장 &amp; 연결 확인</td><td>버튼</td><td>클릭 → 최대 60초 대기 (자동 재시도하며 연결)</td></tr>
-    <tr><td>3</td><td>종료 / 다시 설정</td><td>버튼</td><td>성공 → <b>종료</b> / 실패 → <b>다시 설정</b> (결과에 따라 강조됨)</td></tr>
+    <tr><td>3</td><td>완료 화면</td><td>안내/버튼</td><td>성공 → USB 분리 후 ⨉로 닫기 / 실패 → <b>다시 설정</b></td></tr>
   </table>
 
   <!-- 6 -->

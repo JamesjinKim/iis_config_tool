@@ -216,6 +216,34 @@ select option { font-family: -apple-system, sans-serif; }
   white-space: pre-wrap;
 }
 
+/* 고급 링크 (펌웨어 재설치 등 — 평소엔 눈에 안 띄게) */
+.adv-link {
+  display: block;
+  text-align: center;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.adv-link:hover { color: var(--text); }
+
+/* 완료 안내 배너 (성공 시) */
+.done-banner {
+  width: 100%;
+  background: var(--green-bg);
+  border: 1px solid #b2f2bb;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.6;
+  color: var(--green);
+}
+.done-banner b { color: var(--text); }
+.done-banner .muted { color: var(--muted); font-size: 12px; }
+
 /* 버전 정보 푸터 */
 .version-bar {
   position: fixed;

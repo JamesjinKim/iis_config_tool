@@ -20,8 +20,8 @@
     <!-- ===== 1단계: 디바이스 연결 ===== -->
     <section class="screen active" id="screen-1">
       <div class="icon-big">🔌</div>
-      <h1>디바이스를 USB로 연결하세요</h1>
-      <p class="sub">센서를 USB 케이블로 연결한 뒤 아래 버튼을 누르세요.</p>
+      <h1>WiFi 설정 시작</h1>
+      <p class="sub">센서를 USB 케이블로 PC에 연결한 뒤,<br>아래에서 디바이스를 연결하세요.</p>
 
       <div class="field">
         <label>USB 포트</label>
@@ -33,9 +33,11 @@
 
       <div id="device-status" class="device-box hidden"></div>
 
+      <button class="btn primary hidden" id="btn-to-wifi">WiFi 설정 ▶</button>
       <button class="btn primary" id="btn-detect">디바이스 연결</button>
-      <button class="btn ghost hidden" id="btn-to-wifi">WiFi 설정 ▶</button>
-      <button class="btn ghost hidden" id="btn-flash-fw" title="펌웨어를 새로 설치하거나 업데이트합니다">⚙ 펌웨어 설치 / 업데이트</button>
+
+      <!-- 고급/AS: 펌웨어 설치는 작은 링크로 (공장 출하 시 이미 설치됨) -->
+      <a class="adv-link hidden" id="btn-flash-fw" title="공장 출하 시 이미 설치되어 있습니다. 재설치/업데이트가 필요할 때만 사용하세요.">고급: 펌웨어 재설치 / 업데이트</a>
     </section>
 
     <!-- ===== 2단계: WiFi 입력 ===== -->
@@ -75,9 +77,14 @@
         <pre id="log-pre"></pre>
       </details>
 
+      <!-- 성공 시 안내 배너 (완료 화면 유지 — 사용자가 직접 창을 닫음) -->
+      <div class="done-banner hidden" id="done-banner">
+        ✅ 모든 설정이 끝났습니다. <b>USB를 분리</b>하고 사용하세요.<br>
+        <span class="muted">창은 좌측 상단 ⨉ 로 닫으면 됩니다.</span>
+      </div>
+
       <!-- 버튼은 결과(성공/실패)에 따라 main.js 에서 순서/강조를 동적으로 구성 -->
       <button class="btn primary" id="btn-retry">다시 설정</button>
-      <button class="btn primary" id="btn-quit">종료</button>
       <button class="btn ghost" id="btn-another">다른 디바이스 설정</button>
     </section>
 

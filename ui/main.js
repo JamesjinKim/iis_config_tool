@@ -5,9 +5,9 @@
 //   write_wifi(port, ssid, password)   → NVS 주입 + 부팅 로그로 결과 확인
 
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 
-let selectedPort = null; // 사용자가 선택/감지한 포트
+let selectedPort = null;  // 사용자가 선택/감지한 포트
+let productInfo = null;   // 이 GUI에 번들된 제품/펌웨어 버전 정보
 
 const $ = (id) => document.getElementById(id);
 const overlay = $("overlay");
@@ -79,13 +79,16 @@ $("btn-detect").addEventListener("click", async () => {
       <div class="title">✅ 디바이스 감지됨</div>
       <div class="row">칩: <b>${info.chip}</b></div>
       <div class="row">MAC: <code>${info.mac}</code></div>
-      <div class="row">기능: ${features}</div>
-      <div class="row">포트: <code>${info.port}</code></div>`;
+      <div class="row">포트: <code>${info.port}</code></div>
+      <div class="row" style="margin-top:6px"><b>아래 "WiFi 설정 ▶" 버튼으로 진행하세요.</b></div>`;
     statusBox.classList.remove("hidden");
 
+    // 연결 버튼은 "다시 연결"(보조)로, WiFi 설정을 주 버튼으로
     $("btn-detect").textContent = "다시 연결";
+    $("btn-detect").classList.remove("primary");
+    $("btn-detect").classList.add("ghost");
     $("btn-to-wifi").classList.remove("hidden");
-    $("btn-flash-fw").classList.remove("hidden"); // 펌웨어 설치 옵션 노출
+    $("btn-flash-fw").classList.remove("hidden"); // 고급: 펌웨어 재설치 링크 노출
   } catch (e) {
     hideOverlay();
     statusBox.className = "device-box error";
@@ -182,15 +185,21 @@ $("btn-save").addEventListener("click", async () => {
 
     // status: connected | ssid_not_found | auth_failed | trying
     switch (result.status) {
-      case "connected":
+      case "connected": {
         icon.textContent = "✅";
         title.textContent = "설정 완료 & WiFi 연결됨!";
         sub.textContent = "이제 USB를 분리해도 됩니다. 전원만 들어오면 자동으로 이 WiFi에 연결됩니다.";
         box.className = "result-box";
+        // 펌웨어 버전(=펌웨어 정상) + WiFi/IP(=연결 정상)를 함께 표시
+        const fwLine = productInfo
+          ? `<div class="row"><b>펌웨어:</b> <span class="val">${productInfo.product} v${productInfo.fw_version}</span></div>`
+          : "";
         box.innerHTML = `
+          ${fwLine}
           <div class="row"><b>WiFi:</b> <span class="val">${result.ssid}</span></div>
           <div class="row"><b>IP 주소:</b> <span class="val">${result.ip || "(획득 중)"}</span></div>`;
         break;
+      }
 
       case "ssid_not_found":
         icon.textContent = "❌";
@@ -245,29 +254,26 @@ $("btn-save").addEventListener("click", async () => {
 
 $("btn-back-1").addEventListener("click", () => goStep(1));
 
-// ===== 3단계: 완료 — 결과에 따라 버튼 강조/순서 결정 =====
+// ===== 3단계: 완료 — 결과에 따라 화면 구성 =====
 //
-// 성공: [종료](강조) + [다른 디바이스 설정](보조)   — 할 일 끝남
-// 실패: [다시 설정](강조) + [종료](보조)            — 값을 고쳐야 함
+// 성공: 완료 안내 배너 표시 + [다른 디바이스 설정](보조). 앱은 닫지 않음(사용자가 ⨉로 닫음)
+// 실패: [다시 설정](강조) + [다른 디바이스 설정](보조). 값을 고쳐 재시도
 function configureFinishButtons(isSuccess) {
-  const retry = $("btn-retry");   // 다시 설정 (2단계로)
-  const quit = $("btn-quit");     // 앱 종료
-  const another = $("btn-another"); // 다른 디바이스 설정 (1단계로)
+  const retry = $("btn-retry");       // 다시 설정 (2단계로)
+  const another = $("btn-another");   // 다른 디바이스 설정 (1단계로)
+  const banner = $("done-banner");    // 완료 안내 배너
 
   if (isSuccess) {
-    // 종료를 주(primary) 버튼으로, 다시 설정은 숨김
-    quit.classList.remove("hidden", "ghost");
-    quit.classList.add("primary");
+    // 완료 안내 배너 표시, "다시 설정"은 숨김
+    banner.classList.remove("hidden");
     retry.classList.add("hidden");
     another.classList.remove("hidden");
   } else {
-    // 다시 설정을 주(primary) 버튼으로, 종료는 보조(ghost)
+    // 실패: 안내 배너 숨기고 "다시 설정" 강조
+    banner.classList.add("hidden");
     retry.classList.remove("hidden", "ghost");
     retry.classList.add("primary");
-    quit.classList.remove("primary");
-    quit.classList.add("ghost");
-    quit.classList.remove("hidden");
-    another.classList.add("hidden");
+    another.classList.remove("hidden");
   }
 }
 
@@ -284,20 +290,11 @@ $("btn-another").addEventListener("click", () => {
   goStep(1);
 });
 
-// 종료 → 앱 완전 종료
-$("btn-quit").addEventListener("click", async () => {
-  try {
-    await getCurrentWindow().close();
-  } catch (e) {
-    // 닫기 실패 시 최소한 1단계로
-    goStep(1);
-  }
-});
-
 // ===== 시작 시: 제품/버전 정보 로드 → 푸터 표시 =====
 async function loadProductInfo() {
   try {
     const info = await invoke("product_info");
+    productInfo = info; // 완료 화면 등에서 재사용
     $("version-bar").textContent =
       `${info.product} · 펌웨어 v${info.fw_version} · ${info.chip} · ESP-IDF ${info.idf_version}`;
     // 1단계 안내 문구에도 제품명 반영
