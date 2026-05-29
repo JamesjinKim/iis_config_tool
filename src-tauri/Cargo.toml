@@ -1,0 +1,30 @@
+[package]
+name = "iis3dwb-config-tool"
+version = "1.0.0"
+description = "IIS3DWB 진동센서 WiFi 설정 툴"
+authors = ["Shinho Technology"]
+edition = "2021"
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# 시리얼 포트 통신 (디바이스 감지 + 부팅 로그 읽기)
+serialport = "4.5"
+# ESP32 플래시 (NVS 파티션 주입) — 라이브러리로 사용
+espflash = { version = "4.4", default-features = false, features = ["serialport"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IIS3DWB WiFi 설정</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- 상단 진행 표시 -->
+    <div class="stepper">
+      <div class="step active" data-step="1"><span class="dot">1</span>연결</div>
+      <div class="line"></div>
+      <div class="step" data-step="2"><span class="dot">2</span>WiFi 입력</div>
+      <div class="line"></div>
+      <div class="step" data-step="3"><span class="dot">3</span>완료</div>
+    </div>
+
+    <!-- ===== 1단계: 디바이스 연결 ===== -->
+    <section class="screen active" id="screen-1">
+      <div class="icon-big">🔌</div>
+      <h1>디바이스를 USB로 연결하세요</h1>
+      <p class="sub">센서를 USB 케이블로 연결한 뒤 아래 버튼을 누르세요.</p>
+
+      <div class="field">
+        <label>USB 포트</label>
+        <div class="select-row">
+          <select id="port-select"><option value="">— 포트 검색 중 —</option></select>
+          <button class="btn icon" id="btn-refresh-ports" title="포트 새로고침">⟳</button>
+        </div>
+      </div>
+
+      <div id="device-status" class="device-box hidden"></div>
+
+      <button class="btn primary" id="btn-detect">디바이스 연결</button>
+      <button class="btn ghost hidden" id="btn-to-wifi">WiFi 설정 ▶</button>
+      <button class="btn ghost hidden" id="btn-flash-fw" title="펌웨어를 새로 설치하거나 업데이트합니다">⚙ 펌웨어 설치 / 업데이트</button>
+    </section>
+
+    <!-- ===== 2단계: WiFi 입력 ===== -->
+    <section class="screen" id="screen-2">
+      <div class="icon-big">📶</div>
+      <h1>WiFi 정보 입력</h1>
+      <p class="sub">디바이스가 연결할 WiFi의 이름과 비밀번호를 입력하세요.<br>(2.4GHz WiFi만 지원)</p>
+
+      <div class="field">
+        <label>WiFi 이름 (SSID)</label>
+        <input type="text" id="wifi-ssid" placeholder="예: MyHomeWiFi" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label>비밀번호</label>
+        <div class="pw-row">
+          <input type="password" id="wifi-pw" placeholder="WiFi 비밀번호" autocomplete="off" />
+          <button class="btn icon" id="btn-show-pw" title="표시">👁</button>
+        </div>
+      </div>
+
+      <div id="wifi-error" class="error-box hidden"></div>
+
+      <button class="btn primary" id="btn-save">저장 &amp; 연결 확인</button>
+      <button class="btn ghost" id="btn-back-1">◀ 이전</button>
+    </section>
+
+    <!-- ===== 3단계: 완료 ===== -->
+    <section class="screen" id="screen-3">
+      <div class="icon-big success" id="result-icon">✅</div>
+      <h1 id="result-title">설정 완료!</h1>
+      <div class="result-box" id="result-box"></div>
+      <p class="sub" id="result-sub">이제 USB를 분리해도 됩니다. 디바이스가 자동으로 WiFi에 연결됩니다.</p>
+
+      <details class="log-details" id="log-details">
+        <summary>부팅 로그 보기</summary>
+        <pre id="log-pre"></pre>
+      </details>
+
+      <!-- 버튼은 결과(성공/실패)에 따라 main.js 에서 순서/강조를 동적으로 구성 -->
+      <button class="btn primary" id="btn-retry">다시 설정</button>
+      <button class="btn primary" id="btn-quit">종료</button>
+      <button class="btn ghost" id="btn-another">다른 디바이스 설정</button>
+    </section>
+
+    <!-- 로딩 오버레이 -->
+    <div class="overlay hidden" id="overlay">
+      <div class="spinner"></div>
+      <p id="overlay-text">처리 중...</p>
+    </div>
+
+    <!-- 버전 정보 푸터 (제품/펌웨어 버전 확인용) -->
+    <div class="version-bar" id="version-bar">버전 정보 로딩 중…</div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

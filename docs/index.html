@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IIS3DWB 진동센서 — WiFi 설정 시스템 문서</title>
+<style>
+  :root {
+    --bg:#0f1419; --card:#1a2029; --card2:#222b36;
+    --text:#e6e9ee; --muted:#98a2b3; --accent:#4dabf7;
+    --green:#51cf66; --yellow:#ffd43b; --red:#ff6b6b; --magenta:#cc5de8;
+    --border:#2d3744; --mono:"SF Mono","JetBrains Mono","Consolas",monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",sans-serif;
+         background:var(--bg); color:var(--text); line-height:1.7; }
+  .wrap { max-width:1000px; margin:0 auto; padding:0 24px 80px; }
+  header { background:linear-gradient(135deg,#2b8a3e 0%,#0c4a1e 100%); padding:46px 24px 38px;
+           text-align:center; border-bottom:1px solid var(--border); }
+  header h1 { margin:0 0 8px; font-size:28px; }
+  header p { margin:0; color:#d3f9d8; font-size:15px; }
+  .badge { display:inline-block; background:rgba(255,255,255,.15); padding:3px 12px;
+           border-radius:20px; font-size:12px; margin-top:14px; letter-spacing:.5px; }
+  h2 { margin:48px 0 16px; font-size:22px; padding-bottom:10px; border-bottom:2px solid var(--accent);
+       display:flex; align-items:center; gap:10px; }
+  h2 .num { background:var(--accent); color:#06121f; width:30px; height:30px; border-radius:8px;
+            display:inline-flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; flex-shrink:0; }
+  h3 { margin:28px 0 12px; font-size:17px; color:var(--accent); }
+  p { color:#d4d9e0; }
+  .muted { color:var(--muted); font-size:14px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px 22px; margin:16px 0; }
+  pre { background:#0b0f14; border:1px solid var(--border); border-radius:10px; padding:14px 16px;
+        overflow-x:auto; font-family:var(--mono); font-size:12.5px; color:#cdd6e0; line-height:1.55; }
+  code { font-family:var(--mono); background:var(--card2); padding:2px 7px; border-radius:5px; font-size:13px; color:#ffd8a8; }
+  pre code { background:none; padding:0; color:inherit; }
+  table { width:100%; border-collapse:collapse; margin:16px 0; font-size:13.5px; }
+  th,td { text-align:left; padding:10px 13px; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { background:var(--card2); color:var(--accent); font-weight:600; }
+  tr:hover td { background:rgba(77,171,247,.06); }
+  .pill { padding:2px 9px; border-radius:12px; font-size:12px; font-weight:600; white-space:nowrap; }
+  .ok { background:rgba(81,207,102,.18); color:var(--green); }
+  .warn { background:rgba(255,212,59,.18); color:var(--yellow); }
+  .no { background:rgba(255,107,107,.18); color:var(--red); }
+  .flow { font-family:var(--mono); font-size:13px; white-space:pre; background:#0b0f14; border:1px solid var(--border);
+          border-radius:10px; padding:18px; overflow-x:auto; color:#a5d8ff; }
+  .note { border-left:4px solid var(--yellow); background:rgba(255,212,59,.08); padding:12px 18px; border-radius:0 8px 8px 0; margin:16px 0; }
+  .note.green { border-color:var(--green); background:rgba(81,207,102,.08); }
+  .note.blue { border-color:var(--accent); background:rgba(77,171,247,.08); }
+  .toc { background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:18px 24px; margin:24px 0; }
+  .toc a { color:var(--accent); text-decoration:none; display:block; padding:3px 0; }
+  .toc a:hover { text-decoration:underline; }
+  kbd { background:var(--card2); border:1px solid var(--border); border-bottom-width:2px; border-radius:5px;
+        padding:1px 7px; font-family:var(--mono); font-size:12px; }
+  footer { text-align:center; color:var(--muted); font-size:13px; margin-top:60px; }
+  .cmd-name { color:var(--magenta); font-weight:700; }
+  .step-num { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px;
+              background:var(--green); color:#06121f; border-radius:50%; font-weight:700; font-size:14px; margin-right:8px; }
+  .ok-line { color:var(--green); }
+</style>
+</head>
+<body>
+<header>
+  <h1>✅ IIS3DWB 진동센서 — WiFi 설정 시스템</h1>
+  <p>NVS(Flash) 직접 주입 방식으로 WiFi 자동 연결을 구현 · 실기기 검증 완료</p>
+  <div class="badge">ESP32-S3 · ESP-IDF v5.4.3 · 검증일 2026-05-29</div>
+</header>
+
+<div class="wrap">
+
+  <div class="toc">
+    <strong>목차</strong>
+    <a href="#summary">1. 한 줄 요약</a>
+    <a href="#verified">2. 검증 결과 (실기기)</a>
+    <a href="#arch">3. 시스템 구조</a>
+    <a href="#storage">4. 저장 위치 — NVS(Flash)</a>
+    <a href="#method">5. 성공 방법 — NVS 직접 주입</a>
+    <a href="#howto">6. 따라하기 (단계별)</a>
+    <a href="#boot">7. 디바이스 부팅 동작</a>
+    <a href="#firmware">8. 펌웨어 구성 요소</a>
+    <a href="#bugfix">9. 해결한 버그 (스택 오버플로)</a>
+    <a href="#next">10. 다음 단계</a>
+  </div>
+
+  <div class="note blue">
+    📕 <strong>따라하기 설명서</strong> —
+    <a href="setup-guide.html" style="color:var(--accent)">🛠️ 셋업 설명서</a> (펌웨어 플래시) ·
+    <a href="user-guide.html" style="color:var(--accent)">🖥️ GUI 사용 설명서</a> (WiFi 설정, 선택값 안내)
+  </div>
+
+  <!-- 1 -->
+  <h2 id="summary"><span class="num">1</span> 한 줄 요약</h2>
+  <div class="note green">
+    <strong>핵심 성과:</strong> PC에서 WiFi 값이 담긴 <b>NVS 바이너리를 만들어 Flash에 직접 주입</b>하면,
+    디바이스가 부팅 시 그 값을 읽어 <b>WiFi에 자동 연결</b>한다.
+    실기기에서 <b>IP 192.168.0.225 획득까지 검증 완료</b>.
+    제품의 핵심 가치 — "한 번 설정하면 영구 저장되어 자동 연결" — 이 실증되었다.
+  </div>
+  <div class="note blue">
+    이 방식은 USB 실시간 통신(RX) 없이도 동작하므로, <b>개발 검증</b>은 물론 <b>공장 양산 시 일괄 WiFi 주입</b>에도 그대로 활용할 수 있다.
+  </div>
+
+  <!-- 2 -->
+  <h2 id="verified"><span class="num">2</span> 검증 결과 (실기기 로그)</h2>
+  <p>실제 ESP32-S3 디바이스에서 캡처한 부팅 로그. 전 과정이 동작함을 증명한다.</p>
+  <pre><code>I (464) CONFIG_MGR: WiFi 설정 로드 완료 (SSID: example2.4G)        ← ① NVS에서 읽기
+I (654) WIFI_MGR: Connecting to SSID: example2.4G                  ← ② 자동 연결 시작
+I (734) WIFI_MGR: Connected to AP (SSID: example2.4G, Channel: 6)  ← ③ AP 연결
+I (744) wifi:security: WPA2-PSK, phy: bgn, rssi: -48              ← ④ 신호 강함(-48dBm)
+I (2324) WIFI_MGR: Got IP address: 192.168.0.225                 ← ⑤ IP 획득!
+  ★ WiFi Connected Successfully!
+  │ SSID: example2.4G       │
+  │ IP  : 192.168.0.225    │                                      ← ⑥ 완전 연결
+I (3974) IIS3DWB: [1] Accel: ... Mag=1042.39 mg                   ← ⑦ 센서도 동작</code></pre>
+  <table>
+    <tr><th>검증 항목</th><th>결과</th></tr>
+    <tr><td>NVS(Flash)에 WiFi 저장</td><td><span class="pill ok">성공</span> (CSV→바이너리→플래시)</td></tr>
+    <tr><td>부팅 시 NVS에서 WiFi 로드</td><td><span class="pill ok">성공</span></td></tr>
+    <tr><td>저장된 WiFi로 자동 연결</td><td><span class="pill ok">성공</span> (IP 192.168.0.225)</td></tr>
+    <tr><td>재부팅 후 자동 재연결</td><td><span class="pill ok">성공</span></td></tr>
+    <tr><td>센서 + WiFi 동시 동작</td><td><span class="pill ok">성공</span></td></tr>
+  </table>
+
+  <!-- 3 -->
+  <h2 id="arch"><span class="num">3</span> 시스템 구조</h2>
+  <div class="flow">[PC]  WiFi 값 입력
+   │
+   ├─ nvs_partition_gen.py  →  nvs_wifi.bin (NVS 바이너리)
+   │
+   └─ esptool  →  Flash 0x9000 (NVS 파티션)에 주입
+                          │
+                          ▼
+        [ESP32-S3 + IIS3DWB]
+          부팅 → NVS에서 WiFi 읽기 → 자동 연결 → 센서 측정
+          결과는 USB 로그(TX)로 확인</div>
+
+  <!-- 4 -->
+  <h2 id="storage"><span class="num">4</span> 저장 위치 — NVS(Flash)</h2>
+  <p>WiFi 설정은 <b>센서(IIS3DWB) 내부가 아니라</b>, ESP32-S3 모듈의 <b>SPI Flash 칩 안 NVS 파티션</b>에 저장된다.</p>
+  <table>
+    <tr><th>항목</th><th>값</th></tr>
+    <tr><td>파티션</td><td><code>nvs</code> (data/nvs)</td></tr>
+    <tr><td>오프셋</td><td><code>0x9000</code></td></tr>
+    <tr><td>크기</td><td><code>24K</code> (0x6000)</td></tr>
+    <tr><td>네임스페이스</td><td><code>devcfg</code></td></tr>
+    <tr><td>키</td><td><code>wifi_ssid</code> (string), <code>wifi_pass</code> (string)</td></tr>
+  </table>
+  <div class="note">
+    NVS는 펌웨어(앱 코드)와 <b>물리적으로 분리된 파티션</b>이라, 펌웨어를 재플래시해도 설정이 남는다.
+    전원이 꺼져도 유지(비휘발성)되어 재부팅 후 자동 연결이 가능하다. (EEPROM이라는 별도 칩은 이 보드에 없으며, 그 역할을 Flash 내 NVS가 한다.)
+  </div>
+
+  <!-- 5 -->
+  <h2 id="method"><span class="num">5</span> 성공 방법 — NVS 직접 주입</h2>
+  <p>사용자가 입력한 WiFi 값을 <b>NVS 형식의 바이너리로 변환</b>한 뒤, esptool로 NVS 파티션 위치에 굽는다.
+     디바이스는 이미 그 위치에서 설정을 읽도록 만들어져 있으므로, 추가 통신 없이 자동 연결된다.</p>
+  <div class="flow">CSV (key,type,encoding,value)
+   │  nvs_partition_gen.py generate
+   ▼
+nvs_wifi.bin (24K NVS 이미지)
+   │  esptool write_flash 0x9000
+   ▼
+디바이스 Flash NVS 파티션  →  부팅 시 읽힘 → 자동 연결</div>
+
+  <h3>NVS CSV 형식 (검증된 형식)</h3>
+  <pre><code>key,type,encoding,value
+devcfg,namespace,,
+wifi_ssid,data,string,example2.4G
+wifi_pass,data,string,example1234</code></pre>
+  <div class="note">
+    네임스페이스 <code>devcfg</code>와 키 이름(<code>wifi_ssid</code>, <code>wifi_pass</code>)은
+    펌웨어 <code>config_manager.c</code>의 정의와 <b>정확히 일치</b>해야 한다.
+    문자열은 반드시 <code>type=data, encoding=string</code>으로 지정 (펌웨어가 <code>nvs_get_str</code>로 읽기 때문).
+  </div>
+
+  <!-- 6 -->
+  <h2 id="howto"><span class="num">6</span> 따라하기 — 단계별</h2>
+  <p class="muted">파일 위치: <code>config-tool/</code> · 디바이스 포트(macOS): <code>/dev/cu.usbmodem1433301</code></p>
+
+  <h3><span class="step-num">1</span>환경 활성화</h3>
+  <pre><code>get_idf
+cd /Users/kimkookjin/Projects/ESP-IDF/IIS3DWB/config-tool</code></pre>
+
+  <h3><span class="step-num">2</span>WiFi 값을 CSV에 작성</h3>
+  <p><code>nvs_wifi.csv</code> 파일의 SSID/비밀번호를 원하는 값으로 수정.</p>
+
+  <h3><span class="step-num">3</span>NVS 바이너리 생성</h3>
+  <pre><code>python $IDF_PATH/components/nvs_flash/nvs_partition_generator/nvs_partition_gen.py \
+       generate nvs_wifi.csv nvs_wifi.bin 0x6000</code></pre>
+  <p class="muted">→ <code>nvs_wifi.bin</code> (24K) 생성됨</p>
+
+  <h3><span class="step-num">4</span>NVS 파티션에 주입 (펌웨어는 유지)</h3>
+  <pre><code>esptool.py --chip esp32s3 -p /dev/cu.usbmodem1433301 -b 460800 \
+           write_flash 0x9000 nvs_wifi.bin</code></pre>
+  <p class="muted">→ 0x9000(NVS 오프셋)에만 쓰기. 펌웨어/부트로더는 건드리지 않음.</p>
+
+  <h3><span class="step-num">5</span>결과 확인 (자동 연결)</h3>
+  <pre><code>idf.py -p /dev/cu.usbmodem1433301 monitor   # 또는 부팅 로그 캡처</code></pre>
+  <p>로그에 <span class="ok-line">★ WiFi Connected Successfully!</span> 와 IP 주소가 뜨면 성공. (모니터 종료: <kbd>Ctrl</kbd>+<kbd>]</kbd>)</p>
+
+  <!-- 7 -->
+  <h2 id="boot"><span class="num">7</span> 디바이스 부팅 동작</h2>
+  <div class="flow">부팅 → NVS에서 WiFi 설정 읽기 (config_manager_load_wifi)
+   ├─ 설정 있음 → 자동 WiFi 연결 → [정상 동작] 센서 측정
+   └─ 설정 없음 → [설정 대기 모드] (자동 연결 시도 안 함 → 크래시 없음)</div>
+
+  <!-- 8 -->
+  <h2 id="firmware"><span class="num">8</span> 펌웨어 구성 요소</h2>
+  <p class="muted">ESP-IDF 빌드에 묶여 프로젝트 루트 <code>components/</code>에 위치 (설정 툴 폴더와 별개).</p>
+  <table>
+    <tr><th>컴포넌트</th><th>역할</th></tr>
+    <tr><td><code>components/config_manager/</code></td><td>NVS(Flash) WiFi 저장·로드·초기화. 네임스페이스 <code>devcfg</code></td></tr>
+    <tr><td><code>components/wifi_manager/</code></td><td>WiFi 연결. 미설정 시 자동 연결 안 함(<code>auto_connect</code> 플래그)</td></tr>
+    <tr><td><code>main/main.c</code></td><td>부팅 시 NVS 로드 → 있으면 자동연결, 없으면 대기</td></tr>
+    <tr><td><code>components/serial_protocol/</code></td><td>USB JSON 명령 처리 (RX 통신용 — 현재는 NVS 주입 방식으로 우회)</td></tr>
+  </table>
+
+  <!-- 9 -->
+  <h2 id="bugfix"><span class="num">9</span> 해결한 버그 — 스택 오버플로</h2>
+  <p>개발 중 부팅루프를 유발하던 버그를 발견·수정했다.</p>
+  <table>
+    <tr><th>항목</th><th>내용</th></tr>
+    <tr><td>증상</td><td>WiFi 미설정 시 부팅 후 수 초 내 크래시 → 무한 재부팅<br>
+        <code>***ERROR*** A stack overflow in task Tmr Svc</code></td></tr>
+    <tr><td>원인</td><td>미설정 상태에서 가짜 SSID로 무한 재연결 →
+        재시도 콜백이 FreeRTOS 타이머 태스크(작은 스택)에서 <code>esp_wifi_connect()</code> 호출 → 오버플로</td></tr>
+    <tr><td>수정</td><td>① 미설정 시 자동 연결/재시도 안 함 (<code>auto_connect=false</code>)<br>
+        ② 타이머 태스크 스택 4096으로 증가 (안전망)</td></tr>
+    <tr><td>결과</td><td><span class="pill ok">해결</span> — 안정적으로 대기 모드 유지, 부팅루프 사라짐</td></tr>
+  </table>
+
+  <!-- 10 -->
+  <h2 id="next"><span class="num">10</span> 다음 단계</h2>
+  <table>
+    <tr><th>단계</th><th>내용</th><th>상태</th></tr>
+    <tr><td>펌웨어: NVS 저장/로드</td><td>config_manager</td><td><span class="pill ok">완료·검증</span></td></tr>
+    <tr><td>NVS 직접 주입으로 자동 연결</td><td>실기기 IP 획득 확인</td><td><span class="pill ok">완료·검증</span></td></tr>
+    <tr><td>스택 오버플로 버그</td><td>부팅루프 해결</td><td><span class="pill ok">완료</span></td></tr>
+    <tr><td>PC 툴에 NVS 주입 통합</td><td>사용자 입력 → bin 생성 → esptool 굽기를 툴 안에서</td><td><span class="pill warn">예정</span></td></tr>
+    <tr><td>NVS 암호화</td><td>비밀번호 평문 저장 방지 (양산 전 보안)</td><td><span class="pill warn">예정</span></td></tr>
+    <tr><td>(선택) USB RX 실시간 통신</td><td>케이블 굽기 없이 즉시 설정 변경</td><td><span class="pill warn">검토</span></td></tr>
+  </table>
+  <div class="note blue">
+    <strong>제품화 경로:</strong> PC 툴이 "사용자 입력 → NVS bin 생성 → esptool로 굽기"를 자동화하면,
+    실시간 RX 통신 없이도 완전한 제품이 된다. (설정 시마다 USB 케이블로 굽는 방식)
+    더 매끄러운 즉시 변경이 필요하면 USB RX 또는 BLE를 추가 검토.
+  </div>
+
+  <footer>
+    IIS3DWB Vibration Sensor — WiFi Config System · NVS 직접 주입 방식 (검증 완료)<br>
+    파일: <code>config-tool/docs/index.html</code>
+  </footer>
+
+</div>
+</body>
+</html>

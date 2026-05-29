@@ -1,0 +1,9 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+.DS_Store
+
+# 개발 중 NVS 테스트 파일 (실제 WiFi 비밀번호 포함 — 커밋 금지)
+nvs_wifi.bin
+nvs_wifi.csv

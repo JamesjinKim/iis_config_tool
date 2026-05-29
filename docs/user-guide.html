@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IIS3DWB GUI 사용 설명서</title>
+<style>
+  :root{--bg:#0f1419;--card:#1a2029;--card2:#222b36;--text:#e6e9ee;--muted:#98a2b3;
+        --accent:#4dabf7;--green:#51cf66;--yellow:#ffd43b;--red:#ff6b6b;--magenta:#cc5de8;
+        --border:#2d3744;--mono:"SF Mono","JetBrains Mono","Consolas",monospace;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",sans-serif;
+       background:var(--bg);color:var(--text);line-height:1.75;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;}
+  header{background:linear-gradient(135deg,#2b8a3e 0%,#0c4a1e 100%);padding:46px 24px 38px;
+         text-align:center;border-bottom:1px solid var(--border);}
+  header h1{margin:0 0 8px;font-size:27px;}
+  header p{margin:0;color:#d3f9d8;font-size:15px;}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:3px 12px;border-radius:20px;
+         font-size:12px;margin-top:14px;letter-spacing:.5px;}
+  h2{margin:46px 0 16px;font-size:22px;padding-bottom:10px;border-bottom:2px solid var(--green);
+     display:flex;align-items:center;gap:10px;}
+  h2 .num{background:var(--green);color:#06121f;width:32px;height:32px;border-radius:9px;
+          display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;}
+  h3{margin:26px 0 10px;font-size:17px;color:var(--green);}
+  p{color:#d4d9e0;}
+  .muted{color:var(--muted);font-size:14px;}
+  pre{background:#0b0f14;border:1px solid var(--border);border-radius:10px;padding:14px 16px;
+      overflow-x:auto;font-family:var(--mono);font-size:13px;color:#cdd6e0;line-height:1.6;}
+  code{font-family:var(--mono);background:var(--card2);padding:2px 7px;border-radius:5px;font-size:13px;color:#ffd8a8;}
+  pre code{background:none;padding:0;color:inherit;}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;}
+  th,td{text-align:left;padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:top;}
+  th{background:var(--card2);color:var(--green);font-weight:600;}
+  .note{border-left:4px solid var(--yellow);background:rgba(255,212,59,.08);padding:12px 18px;border-radius:0 8px 8px 0;margin:16px 0;}
+  .note.green{border-color:var(--green);background:rgba(81,207,102,.08);}
+  .note.red{border-color:var(--red);background:rgba(255,107,107,.08);}
+  .note.blue{border-color:var(--accent);background:rgba(77,171,247,.08);}
+  .toc{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:18px 24px;margin:24px 0;}
+  .toc a{color:var(--green);text-decoration:none;display:block;padding:3px 0;}
+  .toc a:hover{text-decoration:underline;}
+  kbd{background:var(--card2);border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;
+      padding:1px 7px;font-family:var(--mono);font-size:12px;}
+  .nav{display:flex;gap:12px;margin:24px 0;}
+  .nav a{flex:1;text-align:center;background:var(--card2);border:1px solid var(--border);border-radius:10px;
+         padding:14px;color:var(--green);text-decoration:none;font-weight:600;}
+  .nav a:hover{background:rgba(81,207,102,.1);}
+  footer{text-align:center;color:var(--muted);font-size:13px;margin-top:60px;}
+
+  /* GUI 화면 모형(mockup) */
+  .mock{background:#f4f6fa;border-radius:14px;padding:22px 20px;margin:18px 0;color:#1a2233;
+        box-shadow:0 4px 20px rgba(0,0,0,.4);max-width:420px;}
+  .mock .title{font-weight:700;font-size:16px;text-align:center;margin-bottom:14px;}
+  .mock .icon{font-size:40px;text-align:center;}
+  .mock label{display:block;font-size:12px;font-weight:700;color:#6b7585;margin:12px 0 5px;}
+  .mock .listbox{border:2px solid #1971c2;border-radius:8px;padding:10px 12px;background:#fff;
+                 font-family:var(--mono);font-size:13px;display:flex;justify-content:space-between;align-items:center;}
+  .mock .listbox .arrow{color:#1971c2;font-weight:700;}
+  .mock .inp{border:1px solid #dde3ec;border-radius:8px;padding:10px 12px;background:#fff;font-size:13px;color:#999;}
+  .mock .btn{margin-top:14px;background:#1971c2;color:#fff;border-radius:8px;padding:11px;text-align:center;font-weight:700;font-size:14px;}
+  .mock .btn.green{background:#2f9e44;}
+  .callout{display:flex;gap:10px;margin:6px 0 0;font-size:13px;color:#1971c2;align-items:center;}
+  .callout .pt{font-size:18px;}
+
+  .pick{background:rgba(77,171,247,.1);border:1px solid var(--accent);border-radius:10px;padding:14px 18px;margin:14px 0;}
+  .pick .h{color:var(--accent);font-weight:700;margin-bottom:6px;}
+  .pill{padding:2px 9px;border-radius:12px;font-size:12px;font-weight:600;}
+  .ok{background:rgba(81,207,102,.18);color:var(--green);}
+  .no{background:rgba(255,107,107,.18);color:var(--red);}
+
+  /* 2.4GHz 전용 경고 배너 (가장 강조) */
+  .freq-banner{background:linear-gradient(135deg,rgba(255,107,107,.14),rgba(255,212,59,.10));
+    border:2px solid var(--red);border-radius:14px;padding:20px 22px;margin:20px 0;}
+  .freq-banner .big{font-size:20px;font-weight:800;color:#ffb3b3;margin-bottom:8px;}
+  .freq-banner .big u{text-underline-offset:3px;}
+  .freq-banner .desc{font-size:14px;color:#f0d8d8;}
+  .freq-table{width:auto;margin:12px 0 4px;}
+  .freq-table th,.freq-table td{padding:7px 16px;border-bottom:1px solid rgba(255,255,255,.12);}
+  .freq-table th{background:transparent;color:#ffd8a8;}
+</style>
+</head>
+<body>
+<header>
+  <h1>🖥️ IIS3DWB GUI 사용 설명서</h1>
+  <p>설정 툴로 디바이스 WiFi를 설정하는 방법 — 따라하기</p>
+  <div class="badge">IIS3DWB 설정 툴 · macOS</div>
+</header>
+
+<div class="wrap">
+
+  <div class="note blue">
+    이 문서는 펌웨어가 이미 올라간 디바이스의 <b>WiFi 설정</b>용입니다.
+    펌웨어를 처음 굽는 셋업은 <a href="setup-guide.html" style="color:var(--accent)">셋업 설명서</a>를 보세요.
+  </div>
+
+  <!-- ★ 가장 중요한 주의: 2.4GHz 전용 ★ -->
+  <div class="freq-banner">
+    <div class="big">📡 반드시 <u>2.4GHz</u> WiFi를 사용하세요</div>
+    <div class="desc">
+      이 디바이스(ESP32-S3)는 <b>2.4GHz WiFi만 지원</b>합니다.
+      <b>5GHz WiFi는 디바이스가 아예 인식하지 못해 연결되지 않습니다.</b>
+    </div>
+    <table class="freq-table">
+      <tr><th>WiFi 이름 예시</th><th>대역</th><th>연결</th></tr>
+      <tr><td><code>example2.4G</code></td><td>2.4GHz</td><td><span class="pill ok">✅ 연결됨</span></td></tr>
+      <tr><td><code>shinho5G</code></td><td>5GHz</td><td><span class="pill no">❌ 연결 안 됨</span></td></tr>
+    </table>
+    <div class="desc" style="margin-top:8px">
+      💡 공유기가 듀얼밴드(2.4G+5G)면, <b>이름 끝에 <code>2.4G</code>/<code>2G</code></b>가 붙거나
+      5G 표시가 <b>없는</b> 쪽을 고르세요. 5GHz WiFi를 입력하면 툴이
+      <b>"WiFi를 찾을 수 없습니다"</b>로 안내합니다.
+    </div>
+  </div>
+
+  <div class="toc">
+    <strong>목차</strong>
+    <a href="#run">1. 툴 실행하기</a>
+    <a href="#step1">2. [1단계] 연결 — ★포트 선택값★</a>
+    <a href="#step2">3. [2단계] WiFi 입력</a>
+    <a href="#step3">4. [3단계] 완료 확인</a>
+    <a href="#values">5. 한눈에 보는 "내가 선택/입력할 값"</a>
+    <a href="#trouble">6. 문제 해결</a>
+  </div>
+
+  <!-- 1 -->
+  <h2 id="run"><span class="num">1</span> 툴 실행하기</h2>
+  <div class="note red">
+    <b>중요:</b> 툴을 켜기 전에, 같은 디바이스를 쓰는 다른 프로그램
+    (<code>idf.py monitor</code>, 시리얼 터미널 등)을 <b>반드시 종료</b>하세요.
+    USB 포트는 한 번에 하나의 프로그램만 쓸 수 있습니다.
+  </div>
+  <h3>개발 모드로 실행 (현재)</h3>
+  <pre><code>cd /Users/kimkookjin/Projects/ESP-IDF/IIS3DWB/config-tool
+npm run tauri dev</code></pre>
+  <p class="muted">잠시 후 <b>"IIS3DWB 진동센서 WiFi 설정"</b> 창이 뜹니다 (560×720).</p>
+  <p>① 디바이스를 USB로 PC에 연결한 상태에서 ② 위 명령을 실행하면 됩니다.</p>
+
+  <!-- 2 -->
+  <h2 id="step1"><span class="num">2</span> [1단계] 연결 — <span style="color:var(--yellow)">★ 포트 선택값 ★</span></h2>
+
+  <div class="mock">
+    <div class="icon">🔌</div>
+    <div class="title">디바이스를 USB로 연결하세요</div>
+    <label>USB 포트</label>
+    <div class="listbox"><span>/dev/cu.usbmodem1433301</span><span class="arrow">▼</span></div>
+    <div class="callout"><span class="pt">👆</span> 여기를 클릭해 목록에서 선택</div>
+    <div class="btn">디바이스 연결</div>
+  </div>
+
+  <div class="pick">
+    <div class="h">📌 "USB 포트" 목록에서 무엇을 고르나요?</div>
+    <p style="margin:4px 0"><b><code>usbmodem</code>이 포함된 항목</b>을 고르세요. 이것이 ESP32-S3 디바이스입니다.</p>
+    <table>
+      <tr><th>목록에 보이는 값</th><th>선택?</th><th>설명</th></tr>
+      <tr><td><code>/dev/cu.usbmodem1433301</code></td><td><span class="pill ok">✅ 이것</span></td><td>ESP32-S3 디바이스 (숫자는 다를 수 있음)</td></tr>
+      <tr><td><code>/dev/cu.usbserial-XXXX</code></td><td><span class="pill ok">✅ 가능</span></td><td>일부 보드는 usbserial로 표시됨</td></tr>
+      <tr><td><code>/dev/cu.Bluetooth-...</code></td><td><span class="pill no">❌ 아님</span></td><td>블루투스 — 디바이스 아님 (목록에서 자동 제외됨)</td></tr>
+    </table>
+    <p class="muted" style="margin:8px 0 0">
+      💡 보통 디바이스가 1개면 <b>목록에 하나만</b> 뜹니다. 그걸 그대로 두면 됩니다.
+      목록이 비어 있으면 <b>⟳ (새로고침)</b> 버튼을 누르세요.</p>
+  </div>
+
+  <h3>"디바이스 연결" 버튼을 누르면</h3>
+  <p>툴이 그 포트로 연결해 디바이스 정보를 읽습니다. 성공하면 녹색 박스로 표시됩니다:</p>
+  <div class="mock">
+    <div style="background:#ebfbee;border:1px solid #b2f2bb;border-radius:8px;padding:12px;font-size:13px;text-align:left">
+      <div style="font-weight:700">✅ 디바이스 감지됨</div>
+      <div style="color:#6b7585">칩: <b style="color:#1a2233">ESP32-S3</b></div>
+      <div style="color:#6b7585">MAC: <code style="background:#0001;padding:1px 5px;border-radius:4px">30:ED:A0:1A:89:30</code></div>
+      <div style="color:#6b7585">기능: WiFi, BLE</div>
+    </div>
+    <div class="btn" style="background:none;color:#6b7585;border:1px solid #dde3ec">WiFi 설정 ▶</div>
+  </div>
+  <p>→ <b>"WiFi 설정 ▶"</b> 버튼을 눌러 2단계로 넘어갑니다.</p>
+  <div class="note">감지 실패(빨간 박스)면: 포트를 잘못 골랐거나, 다른 프로그램이 포트를 쓰는 중이거나,
+    케이블 문제입니다. 다른 프로그램을 닫고 다시 시도하세요.</div>
+
+  <!-- 3 -->
+  <h2 id="step2"><span class="num">3</span> [2단계] WiFi 입력</h2>
+  <div class="mock">
+    <div class="icon">📶</div>
+    <div class="title">WiFi 정보 입력</div>
+    <label>WiFi 이름 (SSID)</label>
+    <div class="inp">예: MyHomeWiFi</div>
+    <div class="callout"><span class="pt">✏️</span> 연결할 WiFi 이름을 직접 입력</div>
+    <label>비밀번호</label>
+    <div class="inp">WiFi 비밀번호 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;👁</div>
+    <div class="callout"><span class="pt">👁</span> 눈 아이콘으로 입력값 보기/숨기기</div>
+    <div class="btn green">저장 &amp; 연결 확인</div>
+  </div>
+
+  <div class="pick">
+    <div class="h">📌 2단계에서 입력할 값</div>
+    <table>
+      <tr><th>입력칸</th><th>입력할 값</th></tr>
+      <tr><td><b>WiFi 이름 (SSID)</b></td><td>디바이스를 연결할 WiFi 이름을 <b>직접 타이핑</b>.
+        대소문자 정확히! (예: <code>example2.4G</code>)</td></tr>
+      <tr><td><b>비밀번호</b></td><td>그 WiFi의 비밀번호. 오픈 WiFi면 비워둠.</td></tr>
+    </table>
+  </div>
+
+  <div class="note red">
+    <b>2.4GHz WiFi만 됩니다.</b> ESP32-S3는 5GHz를 지원하지 않습니다.
+    공유기가 듀얼밴드면 2.4GHz 대역의 SSID를 입력하세요.
+  </div>
+
+  <p><b>"저장 & 연결 확인"</b> 버튼을 누르면, 툴이:
+    ① WiFi 정보를 디바이스 메모리(NVS)에 저장 →
+    ② 디바이스 재부팅 →
+    ③ 실제로 그 WiFi에 연결되는지 확인 (최대 20초)합니다.</p>
+
+  <!-- 4 -->
+  <h2 id="step3"><span class="num">4</span> [3단계] 완료 확인</h2>
+  <div class="mock">
+    <div class="icon">✅</div>
+    <div class="title">설정 완료 &amp; WiFi 연결됨!</div>
+    <div style="background:#ebfbee;border:1px solid #b2f2bb;border-radius:8px;padding:12px;font-size:13px;text-align:left">
+      <div style="color:#6b7585"><b style="color:#1a2233">WiFi:</b> <span style="color:#2f9e44;font-weight:700">example2.4G</span></div>
+      <div style="color:#6b7585"><b style="color:#1a2233">IP 주소:</b> <span style="color:#2f9e44;font-weight:700">192.168.0.225</span></div>
+    </div>
+    <div style="color:#6b7585;font-size:12px;margin-top:8px">▸ 부팅 로그 보기</div>
+    <div class="btn green">종료</div>
+    <div style="color:#6b7585;font-size:13px;text-align:center;margin-top:8px">다른 디바이스 설정</div>
+  </div>
+
+  <div class="note blue">
+    <b>연결은 보통 바로 안 붙습니다.</b> 디바이스는 1~5초 간격으로 자동 재시도하며 연결합니다.
+    그래서 툴은 최대 <b>60초</b>까지 기다리며 결과를 판정합니다. 잠시 기다려 주세요.
+  </div>
+
+  <div class="pick">
+    <div class="h">📌 완료 화면의 버튼 — 결과에 따라 다릅니다</div>
+    <table>
+      <tr><th>결과</th><th>강조 버튼</th><th>보조 버튼</th></tr>
+      <tr><td>✅ <b>연결됨 (성공)</b></td>
+          <td><b>종료</b> (앱 닫기)</td>
+          <td>다른 디바이스 설정 (처음으로)</td></tr>
+      <tr><td>❌🔑⏳ <b>연결 안 됨</b></td>
+          <td><b>다시 설정</b> (WiFi 재입력)</td>
+          <td>종료</td></tr>
+    </table>
+    <p class="muted" style="margin:8px 0 0">
+      💡 <b>성공하면 "종료"</b>를 눌러 끝내면 됩니다.
+      <b>실패하면 "다시 설정"</b>이 강조되니, 값을 고쳐 다시 시도하세요.
+      여러 디바이스를 연속 설정할 때는 "다른 디바이스 설정"을 누르세요.</p>
+  </div>
+
+  <p>결과는 4가지로 명확히 안내됩니다:</p>
+  <table>
+    <tr><th>화면</th><th>의미</th><th>할 일</th></tr>
+    <tr><td>✅ <b>설정 완료 &amp; WiFi 연결됨!</b><br>+ IP 주소</td>
+        <td>성공. 연결 확인됨.</td>
+        <td>USB 분리 OK. <b>종료</b> 클릭.</td></tr>
+    <tr><td>❌ <b>WiFi를 찾을 수 없습니다</b></td>
+        <td>주변에 그 WiFi가 없음.<br><b>5GHz</b>이거나 이름 오타일 가능성 큼.</td>
+        <td><b>2.4GHz</b> WiFi인지, 이름 대소문자가 맞는지 확인 후 <b>다시 설정</b></td></tr>
+    <tr><td>🔑 <b>비밀번호 오류로 보입니다</b></td>
+        <td>WiFi는 찾았으나 인증 실패.</td>
+        <td>👁 아이콘으로 비밀번호 확인 후 <b>다시 설정</b></td></tr>
+    <tr><td>⏳ <b>저장 완료 — 연결 시도 중</b></td>
+        <td>저장됨. 신호 약함/공유기 바쁨 등으로 60초 내 연결 확인 못함.<br>디바이스는 <b>계속 자동 재시도</b> 중.</td>
+        <td>잠시 후 공유기에서 연결 확인, 또는 신호 강한 곳으로 이동</td></tr>
+  </table>
+  <div class="note green">
+    ⏳·🔑·❌ 모두 <b>WiFi 정보는 이미 디바이스에 저장</b>되어 있습니다.
+    값이 맞고 신호만 약했던 경우라면, 시간이 지나면 자동으로 연결됩니다.
+    값 자체가 틀렸으면 <b>다시 설정</b>으로 올바른 값을 넣으세요.
+  </div>
+  <div class="note red">
+    <b>⚠️ 5GHz 주의:</b> 이름에 <code>5G</code>가 붙은 WiFi(예: <code>shinho5G</code>)는
+    <b>연결되지 않습니다.</b> ESP32-S3는 2.4GHz만 지원합니다. <code>example2.4G</code> 같은
+    2.4GHz 대역 이름을 사용하세요.
+  </div>
+  <p class="muted">▸ <b>부팅 로그 보기</b>를 펼치면 디바이스의 연결 과정·재시도·실패 사유를 볼 수 있습니다 (진단용).</p>
+
+  <div class="note green">
+    성공 시, 이후로는 디바이스에 전원만 들어오면 <b>저장된 WiFi로 자동 연결</b>됩니다.
+    WiFi를 바꿀 때만 이 툴로 다시 설정하면 됩니다.
+  </div>
+
+  <!-- 5 -->
+  <h2 id="values"><span class="num">5</span> 한눈에 보는 "내가 선택/입력할 값"</h2>
+  <table>
+    <tr><th>단계</th><th>요소</th><th>종류</th><th>내가 할 것</th></tr>
+    <tr><td>1</td><td>USB 포트</td><td>목록(list box)</td><td><b><code>usbmodem</code> 포함 항목 선택</b> (보통 자동으로 1개)</td></tr>
+    <tr><td>1</td><td>디바이스 연결</td><td>버튼</td><td>클릭 → 녹색 박스 뜨면 OK</td></tr>
+    <tr><td>1</td><td>WiFi 설정 ▶</td><td>버튼</td><td>클릭 (2단계로 이동)</td></tr>
+    <tr><td>2</td><td>WiFi 이름 (SSID)</td><td>텍스트 입력</td><td>WiFi 이름 직접 타이핑 (2.4GHz)</td></tr>
+    <tr><td>2</td><td>비밀번호</td><td>텍스트 입력</td><td>WiFi 비밀번호 입력</td></tr>
+    <tr><td>2</td><td>저장 &amp; 연결 확인</td><td>버튼</td><td>클릭 → 최대 60초 대기 (자동 재시도하며 연결)</td></tr>
+    <tr><td>3</td><td>종료 / 다시 설정</td><td>버튼</td><td>성공 → <b>종료</b> / 실패 → <b>다시 설정</b> (결과에 따라 강조됨)</td></tr>
+  </table>
+
+  <!-- 6 -->
+  <h2 id="trouble"><span class="num">6</span> 문제 해결</h2>
+  <table>
+    <tr><th>증상</th><th>원인 / 해결</th></tr>
+    <tr><td>포트 목록이 비어 있음</td><td>USB 연결 확인 → <b>⟳ 새로고침</b> 버튼 클릭. 케이블이 데이터용인지 확인.</td></tr>
+    <tr><td>"연결 실패" 빨간 박스 (1단계)</td><td>다른 프로그램(monitor/터미널)이 포트 점유 중 → 종료 후 재시도. 포트 잘못 선택했는지 확인.</td></tr>
+    <tr><td>❌ "WiFi를 찾을 수 없습니다"</td><td><b>5GHz WiFi</b>이거나 이름 오타 → <b>2.4GHz</b> 이름·대소문자 확인 후 다시 설정</td></tr>
+    <tr><td>🔑 "비밀번호 오류로 보입니다"</td><td>비밀번호 확인(👁) 후 다시 설정</td></tr>
+    <tr><td>⏳ "저장 완료 — 연결 시도 중"</td><td>신호 약함/공유기 바쁨 → 디바이스가 자동 재시도 중. 신호 강한 곳으로 이동하거나 잠시 대기</td></tr>
+    <tr><td>창이 안 뜸</td><td><code>npm run tauri dev</code> 가 빌드 중일 수 있음. 잠시 대기.</td></tr>
+    <tr><td>여러 포트가 보임</td><td><code>usbmodem</code>/<code>usbserial</code> 포함 항목 선택. 모르면 하나씩 "디바이스 연결" 시도.</td></tr>
+  </table>
+
+  <div class="nav">
+    <a href="setup-guide.html">◀ 🛠️ 셋업 설명서</a>
+    <a href="index.html">📘 전체 시스템 문서</a>
+  </div>
+
+  <footer>IIS3DWB Vibration Sensor — GUI 사용 설명서 · <code>config-tool/docs/user-guide.html</code></footer>
+</div>
+</body>
+</html>
