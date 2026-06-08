@@ -88,6 +88,12 @@ pub struct WriteResult {
     ip: String,
     /// 사용자에게 보여줄 부팅 로그 요약(연결 관련 줄)
     log_excerpt: String,
+    /// 데이터 스트리밍(송신) 시작이 확인됐는지
+    #[serde(default)]
+    streaming: bool,
+    /// 스트리밍 대상 서버 "ip:port" (확인된 경우)
+    #[serde(default)]
+    server: String,
 }
 
 /// 진행률 콜백 (현재는 무시 — 추후 이벤트로 프론트에 전달 가능)
@@ -339,6 +345,90 @@ fn write_wifi(port: String, ssid: String, password: String) -> Result<WriteResul
         status: analysis.status,
         ip: analysis.ip,
         log_excerpt: analysis.excerpt,
+        streaming: false,
+        server: String::new(),
+    })
+}
+
+/// WiFi + 서버 스트리밍 설정을 함께 기록하고, 부팅 로그에서
+/// WiFi 연결 + 스트리밍 시작까지 확인한다. (전체 패키지 설정용)
+#[tauri::command]
+fn write_config(
+    port: String,
+    ssid: String,
+    password: String,
+    server_ip: String,
+    server_port: u16,
+    rate_step: u8,
+) -> Result<WriteResult, String> {
+    // 1) WiFi + 서버설정 NVS 생성 (transport=0=UDP)
+    let nvs_bin = nvs::generate_full_nvs(
+        NVS_NAMESPACE,
+        &ssid,
+        &password,
+        &server_ip,
+        server_port,
+        rate_step,
+        0,
+        NVS_SIZE,
+    )?;
+
+    // 2) NVS 주입
+    let mut flasher = connect_flasher(&port)?;
+    flasher
+        .write_bin_to_flash(NVS_OFFSET, &nvs_bin, &mut SilentProgress)
+        .map_err(|e| format!("NVS 주입 실패: {}", e))?;
+
+    // 3) 시리얼 회수 → 부팅 로그 캡처 (WiFi 연결 + 스트리밍 시작 확인)
+    let mut serial = flasher.into_connection().into_serial();
+    let mut log = String::new();
+    let mut buf = [0u8; 512];
+    let start = Instant::now();
+    let _ = serial.set_timeout(Duration::from_millis(300));
+
+    let mut streaming = false;
+    // 스트리밍 시작 로그까지 보려면 WiFi 연결 후 몇 초 더 필요 → 최대 75초
+    while start.elapsed() < Duration::from_secs(75) {
+        match serial.read(&mut buf) {
+            Ok(n) if n > 0 => {
+                log.push_str(&String::from_utf8_lossy(&buf[..n]));
+
+                // 스트리밍 시작 확인 → 성공, 조기 종료
+                if log.contains("스트리밍 시작")
+                    || log.contains("센서 데이터 스트리밍")
+                    || log.contains("[스트리밍] 패킷=")
+                {
+                    streaming = true;
+                    break;
+                }
+                // 설정 누락으로 스트리밍 비활성 → 종료
+                if log.contains("스트리밍 비활성") {
+                    break;
+                }
+                // SSID 못 찾음 반복 → 종료
+                let no_ap = log.matches("reason: 201").count()
+                    + log.matches("reason: 205").count()
+                    + log.matches("NO_AP_FOUND").count();
+                if no_ap >= 3 {
+                    break;
+                }
+            }
+            _ => {}
+        }
+    }
+    drop(serial);
+
+    let analysis = parse_boot_log(&log);
+
+    Ok(WriteResult {
+        ssid,
+        saved: true,
+        connected: analysis.connected,
+        status: analysis.status,
+        ip: analysis.ip,
+        log_excerpt: analysis.excerpt,
+        streaming,
+        server: format!("{}:{}", server_ip, server_port),
     })
 }
 
@@ -383,7 +473,8 @@ pub fn run() {
             list_ports,
             detect_device,
             flash_firmware,
-            write_wifi
+            write_wifi,
+            write_config
         ])
         .run(tauri::generate_context!())
         .expect("Tauri 앱 실행 중 오류");

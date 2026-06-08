@@ -159,9 +159,21 @@ $("btn-save").addEventListener("click", async () => {
   clearWifiError();
   const ssid = $("wifi-ssid").value.trim();
   const pw = $("wifi-pw").value;
+  const srvIp = $("srv-ip").value.trim();
+  const srvPort = parseInt($("srv-port").value, 10);
+  const rateStep = parseInt($("rate-step").value, 10);
 
   if (!ssid) {
     showWifiError("WiFi 이름(SSID)을 입력하세요.");
+    return;
+  }
+  // 라즈베리파이 IP 형식 간단 검증 (x.x.x.x)
+  if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(srvIp)) {
+    showWifiError("라즈베리파이 IP를 올바르게 입력하세요. (예: 192.168.0.37)");
+    return;
+  }
+  if (!(srvPort >= 1 && srvPort <= 65535)) {
+    showWifiError("포트 번호가 올바르지 않습니다. (1~65535, 기본 9000)");
     return;
   }
   if (!selectedPort) {
@@ -169,12 +181,15 @@ $("btn-save").addEventListener("click", async () => {
     return;
   }
 
-  showOverlay("WiFi 정보를 저장하고 연결을 확인하는 중...\n(연결은 보통 수~수십 초 걸립니다. 최대 60초 대기)");
+  showOverlay("설정을 저장하고 WiFi 연결 + 데이터 송수신을 확인하는 중...\n(최대 75초 대기 — 연결 후 전송 시작까지 기다립니다)");
   try {
-    const result = await invoke("write_wifi", {
+    const result = await invoke("write_config", {
       port: selectedPort,
       ssid,
       password: pw,
+      serverIp: srvIp,
+      serverPort: srvPort,
+      rateStep: rateStep,
     });
     hideOverlay();
 
@@ -186,18 +201,29 @@ $("btn-save").addEventListener("click", async () => {
     // status: connected | ssid_not_found | auth_failed | trying
     switch (result.status) {
       case "connected": {
-        icon.textContent = "✅";
-        title.textContent = "설정 완료 & WiFi 연결됨!";
-        sub.textContent = "이제 USB를 분리해도 됩니다. 전원만 들어오면 자동으로 이 WiFi에 연결됩니다.";
-        box.className = "result-box";
-        // 펌웨어 버전(=펌웨어 정상) + WiFi/IP(=연결 정상)를 함께 표시
         const fwLine = productInfo
           ? `<div class="row"><b>펌웨어:</b> <span class="val">${productInfo.product} v${productInfo.fw_version}</span></div>`
           : "";
+        const streamRow = result.streaming
+          ? `<div class="row"><b>데이터 송수신:</b> <span class="val ok">✓ 전송 시작됨</span></div>`
+          : `<div class="row"><b>데이터 송수신:</b> <span class="val">⏳ 시작 확인 중</span></div>`;
+
+        if (result.streaming) {
+          icon.textContent = "✅";
+          title.textContent = "전체 설정 완료!";
+          sub.textContent = "WiFi 연결과 데이터 송수신까지 확인되었습니다. USB를 분리해도 전원만 들어오면 자동으로 데이터를 전송합니다.";
+        } else {
+          icon.textContent = "✅";
+          title.textContent = "설정 완료 & WiFi 연결됨";
+          sub.textContent = "WiFi는 연결됐습니다. 데이터 전송 시작은 잠시 후 라즈베리파이 수신 화면에서 확인하세요.";
+        }
+        box.className = "result-box";
         box.innerHTML = `
           ${fwLine}
           <div class="row"><b>WiFi:</b> <span class="val">${result.ssid}</span></div>
-          <div class="row"><b>IP 주소:</b> <span class="val">${result.ip || "(획득 중)"}</span></div>`;
+          <div class="row"><b>IP 주소:</b> <span class="val">${result.ip || "(획득 중)"}</span></div>
+          <div class="row"><b>수신 서버:</b> <span class="val">${result.server || "-"}</span></div>
+          ${streamRow}`;
         break;
       }
 

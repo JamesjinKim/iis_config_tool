@@ -70,13 +70,24 @@ body {
   align-items: center;
   text-align: center;
   flex: 1;
+  min-height: 0;            /* flex 자식이 컨테이너보다 커질 때 줄어들 수 있게 */
+  overflow-y: auto;         /* 내용이 길면(서버 필드 등) 화면 안에서 스크롤 */
   background: var(--card);
   border-radius: 16px;
   box-shadow: var(--shadow);
-  padding: 36px 32px;
+  padding: 32px 32px 28px;
   animation: fade .25s ease;
 }
 .screen.active { display: flex; }
+/* 입력 많은 화면(2단계)은 위에서부터 채워 스크롤이 자연스럽게 + 여백 압축 */
+#screen-2 { justify-content: flex-start; }
+#screen-2 .icon-big { font-size: 40px; margin-bottom: 4px; }
+#screen-2 h1 { font-size: 19px; }
+#screen-2 .sub { margin-bottom: 14px; font-size: 13px; }
+#screen-2 .field { margin-bottom: 10px; }
+/* 2단계는 스크롤 컨테이너이므로 버튼을 auto로 밀지 않고 흐름대로 배치 */
+#screen-2 .btn { margin-top: 12px; }
+#screen-2 #btn-save { margin-top: 16px; }
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 .icon-big { font-size: 56px; margin-bottom: 8px; }
@@ -279,3 +290,16 @@ select option { font-family: -apple-system, sans-serif; }
   animation: spin .8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== 서버 설정 필드 (전체 패키지) ===== */
+.divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 18px 0 6px; color: var(--muted); font-size: 12px;
+}
+.divider::before, .divider::after {
+  content: ""; flex: 1; height: 1px; background: var(--border);
+}
+.field-row { display: flex; gap: 12px; }
+.field-row .field { flex: 1; }
+.hint { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); }
+.result-box .val.ok { color: var(--green); font-weight: 700; }

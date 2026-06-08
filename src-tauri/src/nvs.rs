@@ -47,6 +47,7 @@ const NS_INDEX: u8 = 1; // devcfg 네임스페이스의 인덱스
 
 // NVS 엔트리 타입
 const TYPE_U8: u8 = 0x01;
+const TYPE_U16: u8 = 0x02;
 const TYPE_STR: u8 = 0x21;
 
 /// 하나의 NVS 페이지를 만드는 빌더
@@ -134,6 +135,32 @@ impl NvsPage {
             self.entries.push(e);
             self.states.push(true);
         }
+    }
+
+    /// primitive 엔트리 추가 (u8/u16 등). span=1, 데이터는 [24..32]에 LE, 나머지 0xFF.
+    fn add_primitive(&mut self, key: &str, ty: u8, le_bytes: &[u8]) {
+        let mut e = [0xFFu8; ENTRY_SIZE];
+        e[0] = NS_INDEX;
+        e[1] = ty;
+        e[2] = 1; // span
+        e[3] = 0xFF; // chunk_idx
+        write_key(&mut e, key);
+        // 데이터 8바이트 영역 [24..32]: 값 LE + 나머지 0xFF 유지
+        e[24..24 + le_bytes.len()].copy_from_slice(le_bytes);
+        let crc = Self::entry_crc(&e);
+        e[4..8].copy_from_slice(&crc.to_le_bytes());
+        self.entries.push(e);
+        self.states.push(true);
+    }
+
+    /// u8 값 엔트리 추가
+    fn add_u8(&mut self, key: &str, val: u8) {
+        self.add_primitive(key, TYPE_U8, &[val]);
+    }
+
+    /// u16 값 엔트리 추가
+    fn add_u16(&mut self, key: &str, val: u16) {
+        self.add_primitive(key, TYPE_U16, &val.to_le_bytes());
     }
 
     /// 페이지를 4096바이트 바이너리로 직렬화
@@ -230,6 +257,52 @@ pub fn generate_wifi_nvs(
     Ok(out)
 }
 
+/// WiFi + 서버 스트리밍 설정을 모두 담은 NVS 바이너리 생성.
+///
+/// 엔트리 순서는 ESP-IDF nvs_partition_gen.py(CSV 순서)와 일치:
+/// namespace → wifi_ssid → wifi_pass → srv_ip → srv_port → stream_rate → transport
+pub fn generate_full_nvs(
+    namespace: &str,
+    ssid: &str,
+    password: &str,
+    srv_ip: &str,
+    srv_port: u16,
+    stream_rate: u8,
+    transport: u8,
+    partition_size: usize,
+) -> Result<Vec<u8>, String> {
+    if partition_size < PAGE_SIZE * 2 {
+        return Err("NVS 파티션 크기가 너무 작습니다 (최소 8KB)".into());
+    }
+    if partition_size % PAGE_SIZE != 0 {
+        return Err("NVS 파티션 크기는 4096의 배수여야 합니다".into());
+    }
+    if ssid.is_empty() || ssid.len() > 32 {
+        return Err("SSID 길이가 올바르지 않습니다 (1~32)".into());
+    }
+    if password.len() > 64 {
+        return Err("비밀번호가 너무 깁니다 (최대 64)".into());
+    }
+    if srv_ip.is_empty() || srv_ip.len() > 15 {
+        return Err("서버 IP 형식이 올바르지 않습니다".into());
+    }
+
+    let mut page = NvsPage::new();
+    page.add_namespace(namespace, NS_INDEX);
+    page.add_string("wifi_ssid", ssid);
+    page.add_string("wifi_pass", password);
+    page.add_string("srv_ip", srv_ip);
+    page.add_u16("srv_port", srv_port);
+    page.add_u8("stream_rate", stream_rate);
+    page.add_u8("transport", transport);
+
+    let first = page.serialize();
+    let mut out = vec![0xFFu8; partition_size];
+    out[0..PAGE_SIZE].copy_from_slice(&first);
+
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -244,6 +317,33 @@ mod tests {
         assert_eq!(generated.len(), reference.len(), "크기 불일치");
 
         // 전체 24K 바이트 단위 비교
+        for i in 0..reference.len() {
+            if generated[i] != reference[i] {
+                panic!(
+                    "오프셋 0x{:04x} 에서 첫 차이: 생성={:02x} 기준={:02x}",
+                    i, generated[i], reference[i]
+                );
+            }
+        }
+    }
+
+    /// WiFi + 서버설정 전체 NVS — ESP-IDF 기준 bin과 byte-exact 비교
+    #[test]
+    fn matches_full_reference_bin() {
+        let reference = include_bytes!("../tests_ref_full_nvs.bin");
+        let generated = generate_full_nvs(
+            "devcfg",
+            "example2.4G",
+            "example1234",
+            "192.168.0.37",
+            9000,
+            0,
+            0,
+            0x6000,
+        )
+        .expect("생성 실패");
+
+        assert_eq!(generated.len(), reference.len(), "크기 불일치");
         for i in 0..reference.len() {
             if generated[i] != reference[i] {
                 panic!(
