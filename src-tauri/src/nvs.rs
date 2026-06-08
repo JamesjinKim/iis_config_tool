@@ -260,7 +260,7 @@ pub fn generate_wifi_nvs(
 /// WiFi + 서버 스트리밍 설정을 모두 담은 NVS 바이너리 생성.
 ///
 /// 엔트리 순서는 ESP-IDF nvs_partition_gen.py(CSV 순서)와 일치:
-/// namespace → wifi_ssid → wifi_pass → srv_ip → srv_port → stream_rate → transport
+/// namespace → wifi_ssid → wifi_pass → srv_ip → srv_port → stream_rate → transport → read_mode
 pub fn generate_full_nvs(
     namespace: &str,
     ssid: &str,
@@ -269,6 +269,7 @@ pub fn generate_full_nvs(
     srv_port: u16,
     stream_rate: u8,
     transport: u8,
+    read_mode: u8,
     partition_size: usize,
 ) -> Result<Vec<u8>, String> {
     if partition_size < PAGE_SIZE * 2 {
@@ -295,6 +296,7 @@ pub fn generate_full_nvs(
     page.add_u16("srv_port", srv_port);
     page.add_u8("stream_rate", stream_rate);
     page.add_u8("transport", transport);
+    page.add_u8("read_mode", read_mode);
 
     let first = page.serialize();
     let mut out = vec![0xFFu8; partition_size];
@@ -337,8 +339,9 @@ mod tests {
             "example1234",
             "192.168.0.37",
             9000,
-            0,
-            0,
+            0,   // stream_rate
+            0,   // transport
+            0,   // read_mode
             0x6000,
         )
         .expect("생성 실패");

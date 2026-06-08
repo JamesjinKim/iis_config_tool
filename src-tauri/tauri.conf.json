@@ -13,12 +13,12 @@
     "windows": [
       {
         "title": "IIS3DWB 진동센서 WiFi 설정",
-        "width": 560,
-        "height": 720,
-        "resizable": false,
+        "width": 600,
+        "height": 880,
+        "resizable": true,
         "center": true,
         "minWidth": 560,
-        "minHeight": 720
+        "minHeight": 760
       }
     ],
     "security": {

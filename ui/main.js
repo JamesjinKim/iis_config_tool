@@ -162,6 +162,7 @@ $("btn-save").addEventListener("click", async () => {
   const srvIp = $("srv-ip").value.trim();
   const srvPort = parseInt($("srv-port").value, 10);
   const rateStep = parseInt($("rate-step").value, 10);
+  const readMode = parseInt($("read-mode").value, 10);  // 0=폴링, 1=인터럽트
 
   if (!ssid) {
     showWifiError("WiFi 이름(SSID)을 입력하세요.");
@@ -190,6 +191,7 @@ $("btn-save").addEventListener("click", async () => {
       serverIp: srvIp,
       serverPort: srvPort,
       rateStep: rateStep,
+      readMode: readMode,
     });
     hideOverlay();
 

@@ -360,6 +360,7 @@ fn write_config(
     server_ip: String,
     server_port: u16,
     rate_step: u8,
+    read_mode: u8,
 ) -> Result<WriteResult, String> {
     // 1) WiFi + 서버설정 NVS 생성 (transport=0=UDP)
     let nvs_bin = nvs::generate_full_nvs(
@@ -370,6 +371,7 @@ fn write_config(
         server_port,
         rate_step,
         0,
+        read_mode,
         NVS_SIZE,
     )?;
 
