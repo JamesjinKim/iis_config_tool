@@ -59,9 +59,35 @@
         </div>
       </div>
 
+      <div class="divider"><span>데이터 수신 서버 (라즈베리파이)</span></div>
+
+      <div class="field">
+        <label>라즈베리파이 IP</label>
+        <input type="text" id="srv-ip" placeholder="예: 192.168.0.37" autocomplete="off" />
+        <span class="hint">수신기 실행 시 화면에 표시된 IP를 입력하세요.</span>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>포트</label>
+          <input type="number" id="srv-port" value="9000" min="1" max="65535" />
+        </div>
+        <div class="field">
+          <label>측정 속도 (용도)</label>
+          <select id="rate-step">
+            <option value="0" selected>1 kHz · 일반 모니터링 (기본·권장)</option>
+            <option value="1">3.3 kHz · 저속 분석</option>
+            <option value="2">6.6 kHz · 중속 분석</option>
+            <option value="3">13.3 kHz · 고속 분석</option>
+            <option value="4">26.6 kHz · 정밀 진동분석 (최대)</option>
+          </select>
+          <span class="hint">속도가 높을수록 WiFi 부담이 큽니다. 일반 용도는 1 kHz 권장.</span>
+        </div>
+      </div>
+
       <div id="wifi-error" class="error-box hidden"></div>
 
-      <button class="btn primary" id="btn-save">저장 &amp; 연결 확인</button>
+      <button class="btn primary" id="btn-save">저장 &amp; 송수신 확인</button>
       <button class="btn ghost" id="btn-back-1">◀ 이전</button>
     </section>
 
